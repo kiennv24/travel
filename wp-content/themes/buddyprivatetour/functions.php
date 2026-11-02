@@ -9,25 +9,43 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Enqueue styles and scripts
 function bpt_enqueue_scripts() {
+    $theme_dir = get_template_directory();
+    $theme_uri = get_template_directory_uri();
+
     // Fonts & FontAwesome
     wp_enqueue_style('bpt-fonts', 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@700&display=swap', array(), null);
     wp_enqueue_style('bpt-fontawesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css', array(), null);
     
     // Main Theme base stylesheet
-    wp_enqueue_style('bpt-style', get_template_directory_uri() . '/assets/css/style.css', array(), '1.2.6');
+    $style_ver = file_exists($theme_dir . '/assets/css/style.css') ? filemtime($theme_dir . '/assets/css/style.css') : '2.0.0';
+    wp_enqueue_style('bpt-style', $theme_uri . '/assets/css/style.css', array(), $style_ver);
 
     // Modular Page Stylesheets
-    wp_enqueue_style('bpt-tour-detail', get_template_directory_uri() . '/assets/css/tour-detail.css', array('bpt-style'), '1.0.0');
-    wp_enqueue_style('bpt-tour', get_template_directory_uri() . '/assets/css/tour.css', array('bpt-style'), '1.0.0');
-    wp_enqueue_style('bpt-cart', get_template_directory_uri() . '/assets/css/cart.css', array('bpt-style'), '1.0.0');
-    wp_enqueue_style('bpt-checkout', get_template_directory_uri() . '/assets/css/checkout.css', array('bpt-style'), '1.0.0');
-    wp_enqueue_style('bpt-other-services', get_template_directory_uri() . '/assets/css/other-services.css', array('bpt-style'), '1.0.0');
-    wp_enqueue_style('bpt-pages', get_template_directory_uri() . '/assets/css/pages.css', array('bpt-style'), '1.0.0');
+    $checkout_ver = file_exists($theme_dir . '/assets/css/checkout.css') ? filemtime($theme_dir . '/assets/css/checkout.css') : '2.0.0';
+    $cart_ver = file_exists($theme_dir . '/assets/css/cart.css') ? filemtime($theme_dir . '/assets/css/cart.css') : '2.0.0';
+    $tour_ver = file_exists($theme_dir . '/assets/css/tour.css') ? filemtime($theme_dir . '/assets/css/tour.css') : '2.0.0';
+    $td_ver = file_exists($theme_dir . '/assets/css/tour-detail.css') ? filemtime($theme_dir . '/assets/css/tour-detail.css') : '2.0.0';
+    $os_ver = file_exists($theme_dir . '/assets/css/other-services.css') ? filemtime($theme_dir . '/assets/css/other-services.css') : '2.0.0';
+    $pages_ver = file_exists($theme_dir . '/assets/css/pages.css') ? filemtime($theme_dir . '/assets/css/pages.css') : '2.0.0';
+    $fb_ver = file_exists($theme_dir . '/assets/css/feedback.css') ? filemtime($theme_dir . '/assets/css/feedback.css') : '2.0.0';
 
-    // Theme JS
-    wp_enqueue_script('bpt-main', get_template_directory_uri() . '/assets/js/main.js', array(), '1.0.0', true);
+    wp_enqueue_style('bpt-tour-detail', $theme_uri . '/assets/css/tour-detail.css', array('bpt-style'), $td_ver);
+    wp_enqueue_style('bpt-tour', $theme_uri . '/assets/css/tour.css', array('bpt-style'), $tour_ver);
+    wp_enqueue_style('bpt-cart', $theme_uri . '/assets/css/cart.css', array('bpt-style'), $cart_ver);
+    wp_enqueue_style('bpt-checkout', $theme_uri . '/assets/css/checkout.css', array('bpt-style'), $checkout_ver);
+    wp_enqueue_style('bpt-other-services', $theme_uri . '/assets/css/other-services.css', array('bpt-style'), $os_ver);
+    wp_enqueue_style('bpt-pages', $theme_uri . '/assets/css/pages.css', array('bpt-style'), $pages_ver);
+    $fb_deps = array('bpt-style');
+    if (wp_style_is('wptripadvisor_allcss', 'registered') || wp_style_is('wptripadvisor_allcss', 'enqueued')) {
+        $fb_deps[] = 'wptripadvisor_allcss';
+    }
+    wp_enqueue_style('bpt-feedback', $theme_uri . '/assets/css/feedback.css', $fb_deps, time());
+
+    // Theme JS (English default)
+    $main_ver = file_exists($theme_dir . '/assets/js/main.js') ? filemtime($theme_dir . '/assets/js/main.js') : '2.0.0';
+    wp_enqueue_script('bpt-main', $theme_uri . '/assets/js/main.js', array(), $main_ver, true);
 }
-add_action('wp_enqueue_scripts', 'bpt_enqueue_scripts');
+add_action('wp_enqueue_scripts', 'bpt_enqueue_scripts', 99);
 
 // Theme setup
 function bpt_theme_setup() {
@@ -103,6 +121,13 @@ function bpt_handle_custom_page_routing() {
                 exit;
             }
         }
+        if ($p === 'feedback') {
+            $tmpl = get_template_directory() . '/page-feedback.php';
+            if (file_exists($tmpl)) {
+                include $tmpl;
+                exit;
+            }
+        }
     }
 }
 
@@ -158,7 +183,15 @@ function bpt_sync_db_cart_to_wc() {
                     $wc_prod_id = $item['id'];
                 }
                 if (wc_get_product($wc_prod_id)) {
-                    WC()->cart->add_to_cart($wc_prod_id, intval($item['quantity']));
+                    $cart_item_data = [
+                        'departure_date'  => $item['departure_date'] ?? date('Y-m-d'),
+                        'adults'          => intval($item['adults'] ?? $item['quantity']),
+                        'youths'          => intval($item['youths'] ?? 0),
+                        'children'        => intval($item['children'] ?? 0),
+                        'infants'         => intval($item['infants'] ?? 0),
+                        'bpt_total_price' => floatval($item['total_price'] ?? ($item['price'] * $item['quantity'])),
+                    ];
+                    WC()->cart->add_to_cart($wc_prod_id, intval($item['quantity']), 0, [], $cart_item_data);
                 }
             }
         }
@@ -332,3 +365,85 @@ if (!function_exists('bpt_resolve_image_url')) {
     }
 }
 
+
+
+// Ensure custom calculated tour prices are reflected in WooCommerce Cart
+add_action('woocommerce_before_calculate_totals', 'bpt_wc_custom_cart_item_price', 10, 1);
+function bpt_wc_custom_cart_item_price($cart) {
+    if (is_admin() && !defined('DOING_AJAX')) return;
+    if (did_action('woocommerce_before_calculate_totals') >= 2) return;
+
+    foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
+        if (isset($cart_item['bpt_total_price']) && floatval($cart_item['bpt_total_price']) > 0) {
+            $qty = max(1, intval($cart_item['quantity']));
+            $price_per_item = floatval($cart_item['bpt_total_price']) / $qty;
+            $cart_item['data']->set_price($price_per_item);
+        }
+    }
+}
+
+// Display Departure Date and breakdown of ticket quantities per guest type
+add_filter('woocommerce_get_item_data', 'bpt_wc_display_cart_item_meta', 10, 2);
+function bpt_wc_display_cart_item_meta($item_data, $cart_item) {
+    if (!empty($cart_item['departure_date'])) {
+        $item_data[] = [
+            'name'  => __('Departure Date', 'buddyprivatetour'),
+            'value' => esc_html($cart_item['departure_date']),
+        ];
+    }
+    if (isset($cart_item['adults']) && intval($cart_item['adults']) > 0) {
+        $item_data[] = [
+            'name'  => __('Adults', 'buddyprivatetour'),
+            'value' => intval($cart_item['adults']) . ' ' . __('ticket(s)', 'buddyprivatetour'),
+        ];
+    }
+    if (isset($cart_item['youths']) && intval($cart_item['youths']) > 0) {
+        $item_data[] = [
+            'name'  => __('Youths', 'buddyprivatetour'),
+            'value' => intval($cart_item['youths']) . ' ' . __('ticket(s)', 'buddyprivatetour'),
+        ];
+    }
+    if (isset($cart_item['children']) && intval($cart_item['children']) > 0) {
+        $item_data[] = [
+            'name'  => __('Children', 'buddyprivatetour'),
+            'value' => intval($cart_item['children']) . ' ' . __('ticket(s)', 'buddyprivatetour'),
+        ];
+    }
+    if (isset($cart_item['infants']) && intval($cart_item['infants']) > 0) {
+        $item_data[] = [
+            'name'  => __('Infants', 'buddyprivatetour'),
+            'value' => intval($cart_item['infants']) . ' ' . __('ticket(s)', 'buddyprivatetour'),
+        ];
+    }
+    return $item_data;
+}
+
+// Hide total quantity multiplier (e.g. "x 7") on Checkout Order Review table
+add_filter('woocommerce_checkout_cart_item_quantity', function($qty_html, $cart_item, $cart_item_key) {
+    return '';
+}, 10, 3);
+
+// Hide total quantity multiplier on Order Received & Thank you page order details
+add_filter('woocommerce_order_item_quantity_html', function($qty_html, $item) {
+    return '';
+}, 10, 2);
+
+// Save departure date and individual guest tickets to WooCommerce order line item
+add_action('woocommerce_checkout_create_order_line_item', 'bpt_wc_save_order_item_meta', 10, 4);
+function bpt_wc_save_order_item_meta($item, $cart_item_key, $values, $order) {
+    if (!empty($values['departure_date'])) {
+        $item->add_meta_data(__('Departure Date', 'buddyprivatetour'), $values['departure_date'], true);
+    }
+    if (isset($values['adults']) && intval($values['adults']) > 0) {
+        $item->add_meta_data(__('Adults', 'buddyprivatetour'), intval($values['adults']) . ' ' . __('ticket(s)', 'buddyprivatetour'), true);
+    }
+    if (isset($values['youths']) && intval($values['youths']) > 0) {
+        $item->add_meta_data(__('Youths', 'buddyprivatetour'), intval($values['youths']) . ' ' . __('ticket(s)', 'buddyprivatetour'), true);
+    }
+    if (isset($values['children']) && intval($values['children']) > 0) {
+        $item->add_meta_data(__('Children', 'buddyprivatetour'), intval($values['children']) . ' ' . __('ticket(s)', 'buddyprivatetour'), true);
+    }
+    if (isset($values['infants']) && intval($values['infants']) > 0) {
+        $item->add_meta_data(__('Infants', 'buddyprivatetour'), intval($values['infants']) . ' ' . __('ticket(s)', 'buddyprivatetour'), true);
+    }
+}
