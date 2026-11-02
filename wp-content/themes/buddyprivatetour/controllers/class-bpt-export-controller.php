@@ -278,19 +278,16 @@ class BPT_ExportController {
             // Create ZIP
             self::createZipFromDir($exportDir, $zipFilePath);
 
-            // Synchronize static export directory to project root (no zip copy in project)
+            // Clean up any export folder or zip in project root to keep root clean
             $projectBase = dirname(ABSPATH);
             $projectStaticDir = $projectBase . '/buddyprivatetour-static-site';
+            if (is_dir($projectStaticDir)) {
+                self::deleteDir($projectStaticDir);
+            }
             $projectZipPath = $projectBase . '/buddyprivatetour-static-site.zip';
             if (file_exists($projectZipPath)) {
                 @unlink($projectZipPath);
             }
-
-            // Mirror full unzipped static site to project directory for immediate local preview/usage
-            if (is_dir($projectStaticDir)) {
-                self::deleteDir($projectStaticDir);
-            }
-            self::copyDir($exportDir, $projectStaticDir);
 
             // Update user Downloads folder copy if it exists
             $userDownloadsZip = 'C:/Users/Lenovo/Downloads/buddyprivatetour-static-site.zip';
@@ -1668,81 +1665,41 @@ HTML;
         <!-- Slide 1 -->
         <div class="slide-item active">
             <img src="assets/images/bn3.jpg" alt="Buddy Private Tour - Exclusive Journeys" class="slide-img" />
-            <div class="hero-overlay">
-                <span class="hero-tagline"><i class="fa-solid fa-crown"></i> <span data-i18n="hero_tagline_1">Exclusive Private Tour Services</span></span>
-                <h1 class="hero-title" data-i18n="hero_title_1">Explore Vietnam In Your Own Unique Way</h1>
-                <p class="hero-subtitle" data-i18n="hero_sub_1">Tailor-made private journeys for families & friends featuring modern private cars and licensed local tour guides.</p>
-            </div>
         </div>
 
         <!-- Slide 2 -->
         <div class="slide-item">
             <img src="assets/images/bn2.jpg" alt="Stimulate tourism with Buddy Private Tour" class="slide-img" />
-            <div class="hero-overlay">
-                <span class="hero-tagline"><i class="fa-solid fa-percent"></i> <span data-i18n="hero_tagline_2">Seasonal Tour Offers</span></span>
-                <h2 class="hero-title" style="font-size: 2.85rem; font-weight: 800;" data-i18n="hero_title_2">Cherish Every Unforgettable Moment</h2>
-                <p class="hero-subtitle" data-i18n="hero_sub_2">Indulge in 5-star standard private services with complete itinerary flexibility.</p>
-            </div>
         </div>
 
         <!-- Slide 3 -->
         <div class="slide-item">
             <img src="assets/images/bn1.jpg" alt="Roaming Everywhere Together - Travel Vietnam" class="slide-img" />
-            <div class="hero-overlay">
-                <span class="hero-tagline"><i class="fa-solid fa-gem"></i> <span data-i18n="hero_tagline_3">Distinctive Travel Experiences</span></span>
-                <h2 class="hero-title" style="font-size: 2.85rem; font-weight: 800;" data-i18n="hero_title_3">Hanoi • Da Nang • Phu Quoc • Saigon</h2>
-                <p class="hero-subtitle" data-i18n="hero_sub_3">Easy online booking, instant payment via VietQR, and immediate electronic voucher delivery.</p>
-            </div>
         </div>
 
         <!-- Slide 4 -->
         <div class="slide-item">
             <img src="assets/images/bn4.jpg" alt="Exclusive Group & VIP Tours - Buddy Private Tour" class="slide-img" />
-            <div class="hero-overlay">
-                <span class="hero-tagline"><i class="fa-solid fa-users"></i> <span data-i18n="hero_tagline_4">Exclusive Group & VIP Tours</span></span>
-                <h2 class="hero-title" style="font-size: 2.85rem; font-weight: 800;" data-i18n="hero_title_4">Memorable Group Vacations</h2>
-                <p class="hero-subtitle" data-i18n="hero_sub_4">Private VIP modern fleet, licensed tour guides, and 100% customized corporate & family reunion packages in Da Nang - Ba Na Hills.</p>
-            </div>
         </div>
 
         <!-- Slide 5 -->
         <div class="slide-item">
             <img src="assets/images/bn5.jpg" alt="Family Vacation Packages - Buddy Private Tour" class="slide-img" />
-            <div class="hero-overlay">
-                <span class="hero-tagline"><i class="fa-solid fa-heart"></i> <span data-i18n="hero_tagline_5">Family Vacation Packages</span></span>
-                <h2 class="hero-title" style="font-size: 2.85rem; font-weight: 800;" data-i18n="hero_title_5">Cherish Every Family Moment</h2>
-                <p class="hero-subtitle" data-i18n="hero_sub_5">Sun World Ba Na Hills, Golden Bridge, all-inclusive cable car, and senior & child-friendly private itineraries.</p>
-            </div>
         </div>
 
         <!-- Slide 6 -->
         <div class="slide-item">
             <img src="assets/images/bn6.jpg" alt="Tropical Island Escapes - Buddy Private Tour" class="slide-img" />
-            <div class="hero-overlay">
-                <span class="hero-tagline"><i class="fa-solid fa-water"></i> <span data-i18n="hero_tagline_6">Tropical Island Escapes</span></span>
-                <h2 class="hero-title" style="font-size: 2.85rem; font-weight: 800;" data-i18n="hero_title_6">Discover Coastal Paradise</h2>
-                <p class="hero-subtitle" data-i18n="hero_sub_6">Phu Quoc & island speedboat expeditions, coral reef snorkeling, SUP, and pristine white sandy beaches.</p>
-            </div>
         </div>
 
         <!-- Slide 7 -->
         <div class="slide-item">
             <img src="assets/images/bn7.jpg" alt="Northern Vietnam Highlights - Buddy Private Tour" class="slide-img" />
-            <div class="hero-overlay">
-                <span class="hero-tagline"><i class="fa-solid fa-mountain"></i> <span data-i18n="hero_tagline_7">Northern Vietnam Highlights</span></span>
-                <h2 class="hero-title" style="font-size: 2.85rem; font-weight: 800;" data-i18n="hero_title_7">Conquer The Roof of Indochina</h2>
-                <p class="hero-subtitle" data-i18n="hero_sub_7">Sapa Fansipan Legend 3,143m, Sun World VIP cable car, Muong Hoa mountain train, and majestic mountain peaks.</p>
-            </div>
         </div>
 
         <!-- Slide 8 -->
         <div class="slide-item">
             <img src="assets/images/bn8.jpg" alt="Authentic Cultural Experiences - Buddy Private Tour" class="slide-img" />
-            <div class="hero-overlay">
-                <span class="hero-tagline"><i class="fa-solid fa-compass"></i> <span data-i18n="hero_tagline_8">Authentic Cultural Experiences</span></span>
-                <h2 class="hero-title" style="font-size: 2.85rem; font-weight: 800;" data-i18n="hero_title_8">Travel Like A Local With A Friend</h2>
-                <p class="hero-subtitle" data-i18n="hero_sub_8">Hoi An ancient town heritage, licensed English-speaking local guides, lantern boat rides, and authentic street food.</p>
-            </div>
         </div>
     </div>
 
@@ -1799,7 +1756,13 @@ HTML;
         </div>
 
         <!-- Home TripAdvisor Feedback Slider Section -->
-        {$reviewsSlider}
+        <div class="home-feedback-section">
+            <div class="cat-header-wrap" style="margin-bottom: 2rem;">
+                <span class="category-sub-badge"><i class="fa-solid fa-comments"></i> <span>Guest Reviews</span></span>
+                <h2 class="category-section-title">WHAT OUR CUSTOMERS SAY</h2>
+            </div>
+            {$reviewsSlider}
+        </div>
     </div>
 </div>
 
